@@ -1,0 +1,92 @@
+#my imports
+from IPython import get_ipython
+get_ipython().magic('reset -sf')
+from scipy.interpolate import interp1d
+from scipy import optimize
+import scipy 
+import numpy as np
+import numpy.matlib
+import pandas as pd
+from matplotlib import pyplot
+from scipy import optimize
+from scipy.integrate import solve_ivp
+
+#Susceptible differential equation
+def susceptible(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params    
+    return -r*S*I + reInfect*R - vac*S - mask*S
+
+
+#Infected differential equation 
+def infected(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params    
+    return r*S*I-gamma*I
+
+
+#Recovered differential equation
+def recovered(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params    
+    return gamma*I - reInfect*R + vac*S + mask*S
+
+
+#Perfect Vaccine
+def vaccine(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params
+    return vac*S
+
+
+#Masks
+def masks(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params
+    return mask*S
+
+
+def rhs(t,Y,params):
+    S,I,R=Y
+    r,gamma,reInfect,vac,mask=params    
+    return [susceptible(t,Y,params),infected(t,Y,params),recovered(t,Y,params)]
+    
+#No vaccines, no masks 
+#r,gamma,reInfect,vac,mask
+params=[.9,.7,.1,0,0]
+S_0=10
+I_0=.1
+R_0=0
+tspan = np.linspace(0, 2,100)
+yp_0= solve_ivp(lambda t,Y: rhs(t,Y,params), [tspan[0],tspan[-1]], [S_0,I_0,R_0], method='RK45',t_eval=tspan)
+pyplot.plot(yp_0.t,(yp_0.y[0]),'k',label='Susceptible')
+pyplot.plot(yp_0.t,(yp_0.y[1]),'b',label='Infected')
+pyplot.plot(yp_0.t,(yp_0.y[2]),'r',label='Recovered')
+pyplot.locator_params(axis="x", nbins=16)
+pyplot.locator_params(axis="y", nbins=16)
+pyplot.legend(loc='best', shadow=True, fontsize='x-large')
+pyplot.ylabel('Populaton',fontsize=16)
+pyplot.xlabel('Time',fontsize=16)
+pyplot.title("WITHOUT VACCINES & MASKS",loc='center',fontsize=16)
+pyplot.show()
+
+
+
+#Vaccines and masks 
+#r,gamma,reInfect,vac,mask
+params=[.9,.7,.1,.4,.4]
+S_0=10
+I_0=.1
+R_0=0
+tspan = np.linspace(0, 2,100)
+yp_0= solve_ivp(lambda t,Y: rhs(t,Y,params), [tspan[0],tspan[-1]], [S_0,I_0,R_0], method='RK45',t_eval=tspan)
+pyplot.plot(yp_0.t,(yp_0.y[0]),'k',label='Susceptible')
+pyplot.plot(yp_0.t,(yp_0.y[1]),'b',label='Infected')
+pyplot.plot(yp_0.t,(yp_0.y[2]),'r',label='Recovered')
+pyplot.locator_params(axis="x", nbins=16)
+pyplot.locator_params(axis="y", nbins=16)
+pyplot.legend(loc='best', shadow=True, fontsize='x-large')
+pyplot.ylabel('Populaton',fontsize=16)
+pyplot.xlabel('Time',fontsize=16)
+pyplot.title("WITH VACCINES & MASKS",loc='center',fontsize=16)
+pyplot.show()
